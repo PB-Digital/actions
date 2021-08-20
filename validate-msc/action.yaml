@@ -1,0 +1,17 @@
+name: validate-msc
+author: "Bekir Bekirov"
+description: "validate microservice.yaml file"
+inputs:
+  msc-file:
+    description: "Path to microservice.yaml file"
+    required: false
+    default: "infra/microservice.yaml"
+runs:
+  using: composite
+  steps:
+    - id: validate
+      name: "Validate microservice"
+      run: |
+        echo "Validate microservice file: ${{ inputs.msc-file }}"
+        kubectl apply -f ${{ inputs.msc-file }} --dry-run='client'
+      shell: bash
