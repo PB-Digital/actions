@@ -1,0 +1,40 @@
+name: java-gradle-build
+author: "Bekir Bekirov"
+description: "Build Java project with gradle"
+inputs:
+  java-distribution:
+    description: "Java distribution to use"
+    required: false
+    default: "temurin"
+  java-version:
+    description: "Java version to use"
+    required: false
+    default: "11"
+  cache:
+    description: "Build tool caching"
+    required: false
+    default: "gradle"
+  build-only:
+    description: "Run only build"
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Set up Java
+      uses: actions/setup-java@v2
+      with:
+        distribution: ${{ inputs.java-distribution }}
+        java-version: ${{ inputs.java-version }}
+        cache: ${{ inputs.cache }}
+    - name: Unit test
+      run: |
+        if [[ ${{ inputs.build-only }} != true ]]
+        then
+          gradle test
+        fi
+      shell: bash
+    - name: Package
+      run: |
+        gradle build -x test
+      shell: bash
