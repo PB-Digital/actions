@@ -1,0 +1,49 @@
+name: go-build
+author: "Bekir Bekirov"
+description: "Build Go project"
+inputs:
+  go-version:
+    description: "Go version to use"
+    required: false
+    default: "1.15"
+  build-only:
+    description: "Run only build"
+    required: false
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ inputs.go-version }}
+    - name: Lint
+      run: |
+        if [[ ${{ inputs.build-only }} != true ]]
+        then
+          go get -u golang.org/x/lint/golint
+          golint ./...
+        fi
+      shell: bash
+    - name: vet
+      run: |
+        if [[ ${{ inputs.build-only }} != true ]]
+        then
+          go vet ./...
+        fi
+      shell: bash
+    - name: Test
+      id: test
+      run: |
+        if [[ ${{ inputs.build-only }} != true ]]
+        then
+          go mod download
+          go test ./... -v -coverprofile cover.out
+        fi
+      shell: bash
+    - name: Build
+      id: build
+      run: |
+        go mod download
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a
+      shell: bash
