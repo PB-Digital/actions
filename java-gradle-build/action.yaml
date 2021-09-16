@@ -17,7 +17,7 @@ inputs:
   build-only:
     description: "Run only build"
     required: false
-    default: "true"
+    default: "false"
 runs:
   using: composite
   steps:
