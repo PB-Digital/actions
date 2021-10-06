@@ -13,7 +13,6 @@ inputs:
   cache:
     description: "Build tool caching"
     required: false
-    default: "gradle"
   build-only:
     description: "Run only build"
     required: false
