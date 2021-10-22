@@ -1,0 +1,29 @@
+name: send-to-sonar
+author: "Bekir Bekirov"
+description: "Send to Sonar"
+inputs:
+  sonar-organization:
+    description: "Sonar origanization"
+    required: true
+  sonar-login:
+    description: "Sonar login"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Install Sonarqube scanner
+      shell: bash
+      run: |
+        curl https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip \
+           --output sonar-scanner-cli-4.6.2.2472-linux.zip \
+           --silent
+        unzip -q sonar-scanner-cli-4.6.2.2472-linux.zip
+        rm sonar-scanner-cli-4.6.2.2472-linux.zip
+    - name: Run Sonarqube scanner
+      shell: bash
+      run: |
+        sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.organization=${{ inputs.sonar-organization }} \
+          -Dsonar.login=${{ inputs.sonar-login }} \
+          -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
