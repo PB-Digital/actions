@@ -38,7 +38,7 @@ runs:
           gosec -no-fail -fmt=json -out=results.json ./...
           curl --fail -u ${{ inputs.user }}:${{ inputs.password }} \
               -F "repo-name=${{ github.repository }}"  \
-              -F "repo-url=echo ${{ github.repositoryUrl }}" \
+              -F "repo-url=${{ github.repositoryUrl }}" \
               -F "scan-type=Gosec Scanner" \
               -F "repo-branch=${{ github.ref_name }}" \
               -F "file=@results.json" \
