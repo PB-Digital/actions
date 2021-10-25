@@ -1,0 +1,21 @@
+name: gradle-send-to-sonar
+author: "Bekir Bekirov"
+description: "Send to Sonar"
+inputs:
+  sonar-organization:
+    description: "Sonar origanization"
+    required: true
+  sonar-login:
+    description: "Sonar login"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Run Sonarqube scanner
+      shell: bash
+      run: |
+        gradle build jacocoTestReport sonarqube \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.organization=${{ inputs.sonar-organization }} \
+          -Dsonar.login=${{ inputs.sonar-login }} \
+          -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
