@@ -15,13 +15,21 @@ inputs:
     description: "Path to microservice.yaml file"
     required: false
     default: "infra/microservice.yaml"
+  additional-tag:
+    description: "Additional param in image tag"
+    required: false
 runs:
   using: composite
   steps:
     - id: define-image-tag
       name: "Define docker image tag"
       run: |
-        IMAGE_TAG="${{inputs.dockerRepo}}/${{inputs.appName}}:$GITHUB_RUN_NUMBER"
+        if [[ "${{inputs.additional-tag}}" == "" ]]
+        then
+          IMAGE_TAG="${{inputs.dockerRepo}}/${{inputs.appName}}:${{github.run_number}}"
+        else
+          IMAGE_TAG="${{inputs.dockerRepo}}/${{inputs.appName}}:${{inputs.additional-tag}}.${{github.run_number}}"
+        fi
         echo "::set-output name=image-tag::$(echo $IMAGE_TAG)"
       shell: bash
 
