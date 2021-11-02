@@ -10,6 +10,10 @@ inputs:
     description: "Run only build"
     required: false
     default: "false"
+  test-only:
+    description: "Run only test"
+    required: false
+    default: "false"
 runs:
   using: composite
   steps:
@@ -19,7 +23,7 @@ runs:
         go-version: ${{ inputs.go-version }}
     - name: Lint
       run: |
-        if [[ ${{ inputs.build-only }} != true ]]
+        if [[ ${{ inputs.build-only }} != true ]] && [[ ${{ inputs.test-only }} != true ]]
         then
           go get -u golang.org/x/lint/golint
           golint ./...
@@ -27,7 +31,7 @@ runs:
       shell: bash
     - name: vet
       run: |
-        if [[ ${{ inputs.build-only }} != true ]]
+        if [[ ${{ inputs.build-only }} != true ]] && [[ ${{ inputs.test-only }} != true ]]
         then
           go vet ./...
         fi
@@ -44,6 +48,9 @@ runs:
     - name: Build
       id: build
       run: |
-        go mod download
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a
+        if [[ ${{ inputs.test-only }} != true ]]
+        then
+          go mod download
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a
+        fi
       shell: bash
