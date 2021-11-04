@@ -18,6 +18,10 @@ inputs:
   token:
     description: Token for rules
     required: true
+  ruleset:
+    description: Rule set to be used
+    required: false
+    default: "java-top-10"
 runs:
   using: composite
   steps:
@@ -28,12 +32,43 @@ runs:
         ref: refs/heads/master
         token: ${{ inputs.token }}
         path: infra-helm-chart
+    - id: define-ruleset-file
+      name: Define ruleset file
+      shell: bash
+      run: |
+        RULESET_PATH="unknown"
+        case ${{ inputs.ruleset }} in
+          java-top-10)
+              RULESET_PATH="infra-helm-chart/semgrep/owasp-top-10-java.yaml"
+              ;;
+          javascript)
+              RULESET_PATH="infra-helm-chart/semgrep/javascript.yaml"
+              ;;
+          nodejs)
+              RULESET_PATH="infra-helm-chart/semgrep/nodejs-scan.yaml"
+              ;;
+          typescript)
+              RULESET_PATH="infra-helm-chart/semgrep/typescript.yaml"
+              ;;
+        esac
+        if [[ $RULESET_PATH == "unknown" ]]
+        then
+          echo "File path for ruleset ${{ inputs.ruleset }} is not defined"
+          exit 1
+        fi
+        if [ ! -f $RULESET_PATH ]
+        then
+          echo "File $RULESET_PATH not found"
+          exit 1
+        fi
+        echo "::set-output name=ruleset-path::$(echo $RULESET_PATH)"
+        echo $RULESET_PATH
     - name: Test, show or send
       shell: bash
       run: |
         if [[ ${{ inputs.send-results }} == true ]]
         then
-          semgrep --config "infra-helm-chart/semgrep/owasp-top-10-java.yaml" --output results.json --json
+          semgrep --config ${{ steps.define-ruleset-file.outputs.ruleset-path }} --output results.json --json
           curl --fail -u ${{ inputs.user }}:${{ inputs.password }} \
               -F "repo-name=${{ github.repository }}"  \
               -F "repo-url=${{ github.repositoryUrl }}" \
@@ -42,5 +77,5 @@ runs:
               -F "file=@results.json" \
               ${{ inputs.url }}
         else
-          semgrep --config "infra-helm-chart/semgrep/owasp-top-10-java.yaml" --error
+          semgrep --config ${{ steps.define-ruleset-file.outputs.ruleset-path }} --error
         fi
