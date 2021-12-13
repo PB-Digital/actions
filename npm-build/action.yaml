@@ -29,7 +29,7 @@ inputs:
   configure-csp-headers:
     description: "Run configure-csp-headers"
     required: false
-    default: "true"
+    default: "false"
 runs:
   using: composite
   steps:
@@ -71,7 +71,7 @@ runs:
     - name: Config CSP headers
       shell: bash
       run: |
-       if [[ ${{ inputs.build-only }} != true ]] && [[ ${{ inputs.configure-csp-headers }} == true ]]
+        if [[ ${{ inputs.configure-csp-headers }} == true ]]
         then
           npm run configure-csp-headers
         fi
