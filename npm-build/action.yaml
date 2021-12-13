@@ -71,7 +71,7 @@ runs:
     - name: Config CSP headers
       shell: bash
       run: |
-        if [[ ${{ inputs.configure-csp-headers }} == true ]]
+       if [[ ${{ inputs.build-only }} != true ]] && [[ ${{ inputs.configure-csp-headers }} == true ]]
         then
           npm run configure-csp-headers
         fi
