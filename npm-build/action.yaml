@@ -29,7 +29,7 @@ inputs:
   configure-csp-headers:
     description: "Run configure-csp-headers"
     required: false
-    default: "true"
+    default: "false"
 runs:
   using: composite
   steps:
