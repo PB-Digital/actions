@@ -10,6 +10,14 @@ inputs:
     description: "Run only build"
     required: false
     default: "false"
+  build-dev:
+    description: "Run dev build"
+    required: false
+    default: "false"
+  build-prod:
+    description: "Run prod build"
+    required: false
+    default: "false"
   test-only:
     description: "Run only test"
     required: false
@@ -78,7 +86,21 @@ runs:
     - name: Build
       shell: bash
       run: |
-        if [[ ${{ inputs.test-only }} != true ]]
+        if [[ ${{ inputs.test-only }} != true && [[ ${{ inputs.build-dev }} != true && [[ ${{ inputs.build-prod }} != true ]]
         then
           npm run build
+        fi
+    - name: Build Dev
+      shell: bash
+      run: |
+        if [[ ${{ inputs.test-only }} != true && [[ ${{ inputs.build-dev }} == true ]]
+        then
+          npm run build:dev
+        fi
+    - name: Build Prod
+      shell: bash
+      run: |
+        if [[ ${{ inputs.test-only }} != true && [[ ${{ inputs.build-prod }} == true ]]
+        then
+          npm run build:prod
         fi
