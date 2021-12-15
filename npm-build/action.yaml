@@ -86,7 +86,7 @@ runs:
     - name: Build
       shell: bash
       run: |
-        if [[ ${{ inputs.test-only }} != true && [[ ${{ inputs.build-dev }} != true && [[ ${{ inputs.build-prod }} != true ]]
+        if [[ ${{ inputs.test-only }} != true ]] && [[ ${{ inputs.build-dev }} != true ]] && [[ ${{ inputs.build-prod }} != true ]]
         then
           npm run build
         fi
