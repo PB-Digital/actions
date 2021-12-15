@@ -86,21 +86,21 @@ runs:
     - name: Build
       shell: bash
       run: |
-        if [[ ${{ inputs.test-only }} != true && [[ ${{ inputs.build-dev }} != true && [[ ${{ inputs.build-prod }} != true ]]
+        if [[ ${{ inputs.test-only }} != true ]] && [[ ${{ inputs.build-dev }} != true ]] && [[ ${{ inputs.build-prod }} != true ]]
         then
           npm run build
         fi
     - name: Build Dev
       shell: bash
       run: |
-        if [[ ${{ inputs.test-only }} != true && [[ ${{ inputs.build-dev }} == true ]]
+        if [[ ${{ inputs.test-only }} != true ]] && [[ ${{ inputs.build-dev }} == true ]]
         then
           npm run build:dev
         fi
     - name: Build Prod
       shell: bash
       run: |
-        if [[ ${{ inputs.test-only }} != true && [[ ${{ inputs.build-prod }} == true ]]
+        if [[ ${{ inputs.test-only }} != true ]] && [[ ${{ inputs.build-prod }} == true ]]
         then
           npm run build:prod
         fi
