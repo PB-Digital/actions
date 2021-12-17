@@ -2,6 +2,10 @@ name: validate-msc
 author: "Bekir Bekirov"
 description: "validate microservice.yaml file"
 inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
   k8s-context:
     description: "Cluster to deploy"
     required: true
@@ -12,8 +16,8 @@ inputs:
 runs:
   using: composite
   steps:
-    - id: validate
-      name: "Validate microservice"
+    - name: "Validate microservice"
+      working-directory: ${{ inputs.app-folder }}
       run: |
         echo "Validate microservice file: ${{ inputs.msc-file }}"
         echo "Validating in cluster ${{ inputs.k8s-context }}"
