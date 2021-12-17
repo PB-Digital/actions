@@ -19,6 +19,7 @@ runs:
     - name: "Validate microservice"
       working-directory: ${{ inputs.app-folder }}
       run: |
+        pwd
         echo "Validate microservice file: ${{ inputs.msc-file }}"
         echo "Validating in cluster ${{ inputs.k8s-context }}"
         kubectl config use-context ${{ inputs.k8s-context }}

@@ -2,6 +2,10 @@ name: gosec
 author: "Bekir Bekirov"
 description: "Scan and Send Golang project with Gosec tool"
 inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
   go-version:
     description: "Go version to use"
     required: false
@@ -28,11 +32,14 @@ runs:
         go-version: ${{ inputs.go-version }}
     - name: Setup Gosec
       shell: bash
+      working-directory: ${{ inputs.app-folder }}
       run: |
         go get github.com/securego/gosec/cmd/gosec
     - name: Test, show or send gosec
       shell: bash
+      working-directory: ${{ inputs.app-folder }}
       run: |
+        pwd
         if [[ ${{ inputs.send-results }} == true ]]
         then
           gosec -no-fail -fmt=json -out=results.json ./...
