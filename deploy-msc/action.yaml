@@ -2,6 +2,10 @@ name: deploy-msc
 author: "Bekir Bekirov"
 description: "Deploy microservice to cluster"
 inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
   appName:
     description: "Application name"
     required: true
@@ -35,6 +39,7 @@ runs:
 
     - id: build-docker-image
       name: "Build docker image"
+      working-directory: ${{ inputs.app-folder }}
       run: |
         echo "Building image ${{ steps.define-image-tag.outputs.image-tag }} ..."
         docker build -t ${{ steps.define-image-tag.outputs.image-tag }} .
@@ -56,6 +61,7 @@ runs:
 
     - id: apply-to-k8s
       name: "Apply to Kubernetes"
+      working-directory: ${{ inputs.app-folder }}
       run: |
         echo "Deploying to cluster ${{ inputs.k8s-context }} ..."
         sed -i "s+<container-image>+${{ steps.define-image-tag.outputs.image-tag }}+g" ${{ inputs.msc-file }}

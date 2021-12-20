@@ -2,6 +2,10 @@ name: go-build
 author: "Bekir Bekirov"
 description: "Build Go project"
 inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
   go-version:
     description: "Go version to use"
     required: false
@@ -22,7 +26,9 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
     - name: Lint
+      working-directory: ${{ inputs.app-folder }}
       run: |
+        pwd
         if [[ ${{ inputs.build-only }} != true ]] && [[ ${{ inputs.test-only }} != true ]]
         then
           go get -u golang.org/x/lint/golint
@@ -30,15 +36,18 @@ runs:
         fi
       shell: bash
     - name: vet
+      working-directory: ${{ inputs.app-folder }}
       run: |
+        pwd
         if [[ ${{ inputs.build-only }} != true ]] && [[ ${{ inputs.test-only }} != true ]]
         then
           go vet ./...
         fi
       shell: bash
     - name: Test
-      id: test
+      working-directory: ${{ inputs.app-folder }}
       run: |
+        pwd
         if [[ ${{ inputs.build-only }} != true ]]
         then
           go mod download
@@ -46,8 +55,9 @@ runs:
         fi
       shell: bash
     - name: Build
-      id: build
+      working-directory: ${{ inputs.app-folder }}
       run: |
+        pwd
         if [[ ${{ inputs.test-only }} != true ]]
         then
           go mod download
