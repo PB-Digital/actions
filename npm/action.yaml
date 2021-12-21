@@ -45,17 +45,18 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
 
-    - name: Restore npm cache
-      uses: actions/cache@v2.1.4
-      id: npm-cache
-      with:
-        path: node_modules
-        key: node_modules-${{ hashFiles('**/package-lock.json') }}
+# Downloading cache takes longer than downloading the packages from NPM (https://github.com/PB-Digital/ui-login-application/runs/4594155000?check_suite_focus=true#step:3:159)
+#    - name: Restore npm cache
+#      uses: actions/cache@v2.1.4
+#      id: npm-cache
+#      with:
+#        path: node_modules
+#        key: node_modules-${{ hashFiles('**/package-lock.json') }}
 
     - name: Install dependencies
       shell: bash
       run: npm install
-      if: steps.npm-cache.outputs.cache-hit != 'true'
+#      if: steps.npm-cache.outputs.cache-hit != 'true'
 
     - name: Test
       shell: bash
