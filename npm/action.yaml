@@ -59,30 +59,48 @@ runs:
 
     - name: Test
       shell: bash
-      if: inputs.test
-      run: npm run test
+      run: |
+        if [[ ${{ inputs.test }} == true ]]
+        then
+          npm run test
+        fi
 
     - name: Build
       shell: bash
-      if: inputs.build
-      run: npm run build
+      run: |
+        if [[ ${{ inputs.build }} == true ]]
+        then
+          npm run build
+        fi
 
     - name: Lint
       shell: bash
-      if: inputs.lint
-      run: npm run lint
+      run: |
+        if [[ ${{ inputs.lint }} == true ]]
+        then
+          npm run lint
+        fi
 
     - name: Stylelint
       shell: bash
-      if: inputs.style-lint
-      run: npm run lint:style
+      run: |
+        if [[ ${{ inputs.style-lint }} == true ]]
+        then
+          npm run lint:style
+        fi
 
     - name: NLS check
       shell: bash
-      if: inputs.nls-check
-      run: npm run nls:check
+      run: |
+        if [[ ${{ inputs.nls-check }} == true ]]
+        then
+          npm run nls:check
+        fi
 
     - name: Configure CSP headers
       shell: bash
-      if: inputs.configure-csp-headers
-      run: npm run configure:csp-headers
+      run: |
+        if [[ ${{ inputs.configure-csp-headers }} == true ]]
+        then
+          npm run configure:csp-headers
+        fi
