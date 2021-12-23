@@ -1,0 +1,105 @@
+name: Build and Deploy
+
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        description: 'Application name. Will be used in docker image name'
+        required: true
+        type: string
+      app-folder:
+        description: 'Application location folder'
+        required: true
+        type: string
+    secrets:
+      dev-repo:
+        required: true
+      dev-k8s-context:
+        required: true
+      prod-repo:
+        required: true
+      prod-k8s-context:
+        required: true
+      infosec-url:
+        required: true
+      infosec-user:
+        required: true
+      infosec-pass:
+        required: true
+
+jobs:
+  validate-code:
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build and Test
+        uses: pb-digital/actions/go-build@v1
+        with:
+          app-folder: ${{ inputs.app-folder }}
+  validate-infra:
+    runs-on: [ self-hosted, linux, kubectl, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Validate
+        id: validate
+        uses: pb-digital/actions/validate-msc@v1
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          k8s-context: ${{ secrets.dev-k8s-context }}
+
+  gosec-scan:
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Gosec scan
+        uses: pb-digital/actions/gosec@v1
+        with:
+          app-folder: ${{ inputs.app-folder }}
+  gosec-send:
+    if: ${{ github.ref_name == 'develop' }}
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Gosec scan
+        uses: pb-digital/actions/gosec@v1
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          send-results: "true"
+          url: ${{ secrets.infosec-url }}
+          user: ${{ secrets.infosec-user }}
+          password: ${{ secrets.infosec-pass }}
+
+  deploy_dev:
+    if: ${{ github.ref_name == 'develop' }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v1
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          appName: ${{ inputs.app-name }}
+          dockerRepo: ${{ secrets.dev-repo }}
+          k8s-context: ${{ secrets.dev-k8s-context }}
+  deploy_prod:
+    if: ${{ github.ref_name == 'master' }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, prod ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v1
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          appName: ${{ inputs.app-name }}
+          dockerRepo: ${{ secrets.prod-repo }}
+          k8s-context: ${{ secrets.prod-k8s-context }}

@@ -1,0 +1,70 @@
+name: deploy-msc
+author: "Bekir Bekirov"
+description: "Deploy microservice to cluster"
+inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
+  appName:
+    description: "Application name"
+    required: true
+  dockerRepo:
+    description: "Docker repo url"
+    required: true
+  k8s-context:
+    description: "Cluster to deploy"
+    required: true
+  msc-file:
+    description: "Path to microservice.yaml file"
+    required: false
+    default: "infra/microservice.yaml"
+  additional-tag:
+    description: "Additional param in image tag"
+    required: false
+runs:
+  using: composite
+  steps:
+    - id: define-image-tag
+      name: "Define docker image tag"
+      run: |
+        if [[ "${{inputs.additional-tag}}" == "" ]]
+        then
+          IMAGE_TAG="${{inputs.dockerRepo}}/${{inputs.appName}}:${{github.run_number}}"
+        else
+          IMAGE_TAG="${{inputs.dockerRepo}}/${{inputs.appName}}:${{inputs.additional-tag}}.${{github.run_number}}"
+        fi
+        echo "::set-output name=image-tag::$(echo $IMAGE_TAG)"
+      shell: bash
+
+    - id: build-docker-image
+      name: "Build docker image"
+      working-directory: ${{ inputs.app-folder }}
+      run: |
+        echo "Building image ${{ steps.define-image-tag.outputs.image-tag }} ..."
+        docker build -t ${{ steps.define-image-tag.outputs.image-tag }} .
+      shell: bash
+
+    - id: push-docker-image
+      name: "Push docker image to image repository"
+      run: |
+        echo "Pushing image to ${{ steps.define-image-tag.outputs.image-tag }} ..."
+        docker push ${{ steps.define-image-tag.outputs.image-tag }}
+      shell: bash
+
+    - id: remove-local-image
+      name: "Remove image from local docker"
+      run: |
+        echo "Removing image ${{ steps.define-image-tag.outputs.image-tag }} ..."
+        docker rmi ${{ steps.define-image-tag.outputs.image-tag }}
+      shell: bash
+
+    - id: apply-to-k8s
+      name: "Apply to Kubernetes"
+      working-directory: ${{ inputs.app-folder }}
+      run: |
+        echo "Deploying to cluster ${{ inputs.k8s-context }} ..."
+        sed -i "s+<container-image>+${{ steps.define-image-tag.outputs.image-tag }}+g" ${{ inputs.msc-file }}
+        kubectl config use-context ${{ inputs.k8s-context }}
+        kubectl apply -f ${{ inputs.msc-file }}
+      shell: bash

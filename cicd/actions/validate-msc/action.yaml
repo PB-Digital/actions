@@ -1,0 +1,27 @@
+name: validate-msc
+author: "Bekir Bekirov"
+description: "validate microservice.yaml file"
+inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
+  k8s-context:
+    description: "Cluster to deploy"
+    required: true
+  msc-file:
+    description: "Path to microservice.yaml file"
+    required: false
+    default: "infra/microservice.yaml"
+runs:
+  using: composite
+  steps:
+    - name: "Validate microservice"
+      working-directory: ${{ inputs.app-folder }}
+      run: |
+        pwd
+        echo "Validate microservice file: ${{ inputs.msc-file }}"
+        echo "Validating in cluster ${{ inputs.k8s-context }}"
+        kubectl config use-context ${{ inputs.k8s-context }}
+        kubectl apply -f ${{ inputs.msc-file }} --dry-run='client'
+      shell: bash
