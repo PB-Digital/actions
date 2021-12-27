@@ -2,6 +2,10 @@ name: java-gradle-build
 author: "Bekir Bekirov"
 description: "Build Java project with gradle"
 inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
   java-distribution:
     description: "Java distribution to use"
     required: false
@@ -27,6 +31,7 @@ runs:
         java-version: ${{ inputs.java-version }}
         cache: ${{ inputs.cache }}
     - name: Unit test
+      working-directory: ${{ inputs.app-folder }}
       run: |
         if [[ ${{ inputs.build-only }} != true ]]
         then
@@ -34,6 +39,7 @@ runs:
         fi
       shell: bash
     - name: Package
+      working-directory: ${{ inputs.app-folder }}
       run: |
         gradle build -x test
       shell: bash

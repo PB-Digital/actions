@@ -6,9 +6,6 @@ inputs:
     description: "Application folder"
     required: false
     default: "."
-  appName:
-    description: "Application name"
-    required: true
   dockerRepo:
     description: "Docker repo url"
     required: true
@@ -28,12 +25,20 @@ runs:
     - id: define-image-tag
       name: "Define docker image tag"
       run: |
-        if [[ "${{inputs.additional-tag}}" == "" ]]
+        IMAGE_TAG="${{inputs.dockerRepo}}/${{ github.event.repository.name }}"
+        if [[ ${{ inputs.app-folder }} != "." ]]
         then
-          IMAGE_TAG="${{inputs.dockerRepo}}/${{inputs.appName}}:${{github.run_number}}"
-        else
-          IMAGE_TAG="${{inputs.dockerRepo}}/${{inputs.appName}}:${{inputs.additional-tag}}.${{github.run_number}}"
+          IMAGE_TAG="${IMAGE_TAG}/${{ inputs.app-folder }}"
         fi
+        IMAGE_TAG="${IMAGE_TAG}:"
+
+        if [[ "${{inputs.additional-tag}}" != "" ]]
+        then
+          IMAGE_TAG="${IMAGE_TAG}${{ inputs.additional-tag }}."
+        fi
+        IMAGE_TAG="${IMAGE_TAG}${{ github.run_number }}"
+
+        echo "Defined image tag as: $IMAGE_TAG"
         echo "::set-output name=image-tag::$(echo $IMAGE_TAG)"
       shell: bash
 

@@ -2,6 +2,10 @@ name: semgrep
 author: "Bekir Bekirov"
 description: "Scan and Send Java project with Semgrep tool"
 inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
   send-results:
     description: "Send scan results"
     required: false
@@ -31,9 +35,10 @@ runs:
         repository: "PB-Digital/infra-helm-chart"
         ref: refs/heads/master
         token: ${{ inputs.token }}
-        path: infra-helm-chart
+        path: "${{ inputs.app-folder }}/infra-helm-chart"
     - id: define-ruleset-file
       name: Define ruleset file
+      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         RULESET_PATH="unknown"
@@ -62,15 +67,16 @@ runs:
           exit 1
         fi
         echo "::set-output name=ruleset-path::$(echo $RULESET_PATH)"
-        echo $RULESET_PATH
+        echo "Ruleset path defined as: $RULESET_PATH"
     - name: Test, show or send
+      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         if [[ ${{ inputs.send-results }} == true ]]
         then
           semgrep --config ${{ steps.define-ruleset-file.outputs.ruleset-path }} --output results.json --json
           curl --fail -u ${{ inputs.user }}:${{ inputs.password }} \
-              -F "repo-name=${{ github.repository }}"  \
+              -F "repo-name=${{ github.repository }}/${{ inputs.app-folder }}"  \
               -F "repo-url=${{ github.repositoryUrl }}" \
               -F "scan-type=Semgrep JSON Report" \
               -F "repo-branch=${{ github.ref_name }}" \
