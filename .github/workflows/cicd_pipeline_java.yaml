@@ -1,0 +1,134 @@
+name: Build and Deploy
+
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        description: 'Application name. Will be used in docker image name'
+        required: true
+        type: string
+      app-folder:
+        description: 'Application location folder'
+        required: true
+        type: string
+    secrets:
+      dev-repo:
+        required: true
+      dev-k8s-context:
+        required: true
+      prod-repo:
+        required: true
+      prod-k8s-context:
+        required: true
+      infosec-url:
+        required: true
+      infosec-user:
+        required: true
+      infosec-pass:
+        required: true
+      gha-pat:
+        required: true
+      sonar-organization:
+        required: true
+      sonar-login:
+        required: true
+
+jobs:
+  validate-code:
+    runs-on: [ self-hosted, linux, gradle7, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build and Test
+        uses: pb-digital/actions/java-gradle-build@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+  validate-infra:
+    runs-on: [ self-hosted, linux, kubectl, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Validate
+        id: validate
+        uses: pb-digital/actions/validate-msc@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          k8s-context: ${{ secrets.dev-k8s-context }}
+  scan-semgrep:
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Semgrep scan
+        uses: pb-digital/actions/semgrep@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          token: ${{ secrets.gha-pat }}
+  send-semgrep:
+    if: ${{ github.ref_name == 'develop' }}
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Semgrep scan and send
+        uses: pb-digital/actions/semgrep@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          send-results: "true"
+          url: ${{ secrets.infosec-url }}
+          user: ${{ secrets.infosec-user }}
+          password: ${{ secrets.infosec-pass }}
+          token: ${{ secrets.gha-pat }}
+  send-to-sonar:
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Send to Sonar
+        uses: pb-digital/actions/gradle-send-to-sonar@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          sonar-organization: ${{ secrets.sonar-organization }}
+          sonar-login: ${{ secrets.sonar-login }}
+  deploy_dev:
+    if: ${{ github.ref == 'refs/heads/develop' }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        uses: pb-digital/actions/java-gradle-build@v2
+        with:
+          build-only: true
+          app-folder: ${{ inputs.app-folder }}
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          additional-tag: dev
+          dockerRepo: ${{ secrets.dev-repo }}
+          k8s-context: ${{ secrets.dev-k8s-context }}
+  deploy_prod:
+    if: ${{ github.ref == 'refs/heads/master' }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, prod ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        uses: pb-digital/actions/java-gradle-build@v2
+        with:
+          build-only: true
+          app-folder: ${{ inputs.app-folder }}
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          additional-tag: dev
+          dockerRepo: ${{ secrets.prod-repo }}
+          k8s-context: ${{ secrets.prod-k8s-context }}
