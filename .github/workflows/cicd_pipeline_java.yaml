@@ -11,6 +11,11 @@ on:
         description: 'Application location folder'
         required: true
         type: string
+      deploy-to-rsrv:
+        description: 'Deploy to reserve cluster'
+        required: false
+        type: boolean
+        default: true
     secrets:
       dev-repo:
         required: true
@@ -20,6 +25,10 @@ on:
         required: true
       prod-k8s-context:
         required: true
+      rsrv-repo:
+        required: false
+      rsrv-k8s-context:
+        required: false
       infosec-url:
         required: true
       infosec-user:
@@ -93,7 +102,7 @@ jobs:
           sonar-organization: ${{ secrets.sonar-organization }}
           sonar-login: ${{ secrets.sonar-login }}
   deploy_dev:
-    if: ${{ github.ref == 'refs/heads/develop' }}
+    if: ${{ github.ref_name == 'develop' }}
     needs: [ validate-code, validate-infra ]
     runs-on: [ self-hosted, linux, docker, kubectl, dev ]
     steps:
@@ -113,7 +122,7 @@ jobs:
           dockerRepo: ${{ secrets.dev-repo }}
           k8s-context: ${{ secrets.dev-k8s-context }}
   deploy_prod:
-    if: ${{ github.ref == 'refs/heads/master' }}
+    if: ${{ github.ref_name == 'master' }}
     needs: [ validate-code, validate-infra ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
@@ -129,6 +138,26 @@ jobs:
         uses: pb-digital/actions/deploy-msc@v2
         with:
           app-folder: ${{ inputs.app-folder }}
-          additional-tag: dev
+          additional-tag: prod
           dockerRepo: ${{ secrets.prod-repo }}
           k8s-context: ${{ secrets.prod-k8s-context }}
+  deploy_rsrv:
+    if: ${{ github.ref_name == 'master' && inputs.deploy-to-rsrv == true }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, prod ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        uses: pb-digital/actions/java-gradle-build@v2
+        with:
+          build-only: true
+          app-folder: ${{ inputs.app-folder }}
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          additional-tag: rsrv
+          dockerRepo: ${{ secrets.rsrv-repo }}
+          k8s-context: ${{ secrets.rsrv-k8s-context }}
