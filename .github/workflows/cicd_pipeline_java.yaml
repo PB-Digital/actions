@@ -89,6 +89,7 @@ jobs:
           password: ${{ secrets.infosec-pass }}
           token: ${{ secrets.gha-pat }}
   send-to-sonar:
+    needs: [ validate-code ]
     runs-on: [ self-hosted, linux, dev ]
     steps:
       - name: Checkout
@@ -117,6 +118,7 @@ jobs:
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
         with:
+          appName: ${{ inputs.app-name }}
           app-folder: ${{ inputs.app-folder }}
           additional-tag: dev
           dockerRepo: ${{ secrets.dev-repo }}
@@ -137,6 +139,7 @@ jobs:
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
         with:
+          appName: ${{ inputs.app-name }}
           app-folder: ${{ inputs.app-folder }}
           additional-tag: prod
           dockerRepo: ${{ secrets.prod-repo }}
@@ -157,6 +160,7 @@ jobs:
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
         with:
+          appName: ${{ inputs.app-name }}
           app-folder: ${{ inputs.app-folder }}
           additional-tag: rsrv
           dockerRepo: ${{ secrets.rsrv-repo }}
