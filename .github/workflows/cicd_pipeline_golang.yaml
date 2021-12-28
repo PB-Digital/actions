@@ -11,6 +11,17 @@ on:
         description: 'Application location folder'
         required: true
         type: string
+        default: "."
+      in-docker-build:
+        description: 'Is builds project during docker build'
+        required: false
+        type: boolean
+        default: true
+      deploy-to-rsrv:
+        description: 'Deploy to reserve cluster'
+        required: false
+        type: boolean
+        default: true
     secrets:
       dev-repo:
         required: true
@@ -20,11 +31,19 @@ on:
         required: true
       prod-k8s-context:
         required: true
+      rsrv-repo:
+        required: false
+      rsrv-k8s-context:
+        required: false
       infosec-url:
         required: true
       infosec-user:
         required: true
       infosec-pass:
+        required: true
+      sonar-organization:
+        required: true
+      sonar-login:
         required: true
 
 jobs:
@@ -63,7 +82,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Gosec scan
+      - name: Gosec scan and send
         uses: pb-digital/actions/gosec@v2
         with:
           app-folder: ${{ inputs.app-folder }}
@@ -71,6 +90,20 @@ jobs:
           url: ${{ secrets.infosec-url }}
           user: ${{ secrets.infosec-user }}
           password: ${{ secrets.infosec-pass }}
+  send-to-sonar:
+    needs: [ validate-code ]
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Send to Sonar
+        uses: pb-digital/actions/send-to-sonar@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          sonar-organization: ${{ secrets.sonar-organization }}
+          sonar-login: ${{ secrets.sonar-login }}
   deploy_dev:
     if: ${{ github.ref_name == 'develop' }}
     needs: [ validate-code, validate-infra ]
@@ -78,10 +111,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Build
+        if: ${{ inputs.in-docker-build != true}}
+        uses: pb-digital/actions/go-build@v2
+        with:
+          build-only: true
+          app-folder: ${{ inputs.app-folder }}
       - name: "Deploy"
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
         with:
+          appName: ${{ inputs.app-name }}
           app-folder: ${{ inputs.app-folder }}
           additional-tag: dev
           dockerRepo: ${{ secrets.dev-repo }}
@@ -93,11 +133,40 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Build
+        if: ${{ inputs.in-docker-build != true}}
+        uses: pb-digital/actions/go-build@v2
+        with:
+          build-only: true
+          app-folder: ${{ inputs.app-folder }}
       - name: "Deploy"
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
         with:
+          appName: ${{ inputs.app-name }}
           app-folder: ${{ inputs.app-folder }}
           additional-tag: prod
           dockerRepo: ${{ secrets.prod-repo }}
           k8s-context: ${{ secrets.prod-k8s-context }}
+  deploy_rsrv:
+    if: ${{ github.ref_name == 'master' && inputs.deploy-to-rsrv == true }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, prod ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        if: ${{ inputs.in-docker-build != true}}
+        uses: pb-digital/actions/go-build@v2
+        with:
+          build-only: true
+          app-folder: ${{ inputs.app-folder }}
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v2
+        with:
+          appName: ${{ inputs.app-name }}
+          app-folder: ${{ inputs.app-folder }}
+          additional-tag: rsrv
+          dockerRepo: ${{ secrets.rsrv-repo }}
+          k8s-context: ${{ secrets.rsrv-k8s-context }}
