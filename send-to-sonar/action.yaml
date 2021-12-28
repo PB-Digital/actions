@@ -2,6 +2,10 @@ name: send-to-sonar
 author: "Bekir Bekirov"
 description: "Send to Sonar"
 inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
   sonar-organization:
     description: "Sonar origanization"
     required: true
@@ -11,6 +15,17 @@ inputs:
 runs:
   using: composite
   steps:
+    - id: define-project-key
+      name: Define project key
+      shell: bash
+      run: |
+        PROJECT_KEY=${{ github.repository_owner }}_${{ github.event.repository.name }}
+        if [[ ${{ inputs.app-folder }} != "." ]]
+        then
+          PROJECT_KEY="${PROJECT_KEY}_${{ inputs.app-folder }}"
+        fi
+        echo "Project key defined as: $PROJECT_KEY"
+        echo "::set-output name=project-key::$(echo $PROJECT_KEY)"
     - name: Install Sonarqube scanner
       shell: bash
       run: |
@@ -31,7 +46,9 @@ runs:
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.organization=${{ inputs.sonar-organization }} \
           -Dsonar.login=${{ inputs.sonar-login }} \
-          -Dsonar.projectKey=${{ github.repository_owner }}_${{ github.event.repository.name }}
+          -Dsonar.projectBaseDir=${{ inputs.app-folder }} \
+          -Dsonar.projectKey=${{ steps.define-project-key.outputs.project-key }}
+        ls -al
     - name: Clean
       shell: bash
       run: |
