@@ -22,6 +22,11 @@ on:
         required: false
         type: boolean
         default: true
+      stop-release-filename:
+        description: 'If file exists then deploying to production will be omited'
+        required: false
+        type: string
+        default: ""
     secrets:
       dev-repo:
         required: true
@@ -47,6 +52,21 @@ on:
         required: true
 
 jobs:
+  check-allow-release:
+    runs-on: [ self-hosted, linux, dev ]
+    outputs:
+      release-to-prod: ${{ steps.allow-release.outputs.release-to-prod }}
+      release-to-rsrv: ${{ steps.allow-release.outputs.release-to-rsrv }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Check allow release
+        id: allow-release
+        uses: pb-digital/actions/check-allow-release@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          deploy-to-rsrv: ${{ inputs.deploy-to-rsrv }}
+          stop-release-filename: ${{ inputs.stop-release-filename }}
   validate-code:
     runs-on: [ self-hosted, linux, dev ]
     steps:
@@ -118,7 +138,6 @@ jobs:
           build-only: true
           app-folder: ${{ inputs.app-folder }}
       - name: "Deploy"
-        id: deploy
         uses: pb-digital/actions/deploy-msc@v2
         with:
           appName: ${{ inputs.app-name }}
@@ -127,8 +146,8 @@ jobs:
           dockerRepo: ${{ secrets.dev-repo }}
           k8s-context: ${{ secrets.dev-k8s-context }}
   deploy_prod:
-    if: ${{ github.ref_name == 'master' }}
-    needs: [ validate-code, validate-infra ]
+    if: ${{ needs.check-allow-release.outputs.release-to-prod == true }}
+    needs: [ validate-code, validate-infra, check-allow-release ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
       - name: Checkout
@@ -149,8 +168,8 @@ jobs:
           dockerRepo: ${{ secrets.prod-repo }}
           k8s-context: ${{ secrets.prod-k8s-context }}
   deploy_rsrv:
-    if: ${{ github.ref_name == 'master' && inputs.deploy-to-rsrv == true }}
-    needs: [ validate-code, validate-infra ]
+    if: ${{ needs.check-allow-release.outputs.release-to-rsrv == true }}
+    needs: [ validate-code, validate-infra, check-allow-release ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
       - name: Checkout
