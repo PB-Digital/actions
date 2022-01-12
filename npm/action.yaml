@@ -2,11 +2,6 @@ name: npm
 author: "PASHA Bank"
 description: "Build, lint, test NPM project"
 inputs:
-  app-folder:
-    description: "Application folder"
-    required: false
-    default: "."
-
   node-version:
     description: "NodeJS version to use"
     required: false
@@ -46,7 +41,6 @@ runs:
   using: composite
   steps:
     - name: Setup NodeJS version
-      working-directory: ${{ inputs.app-folder }}
       uses: actions/setup-node@v2
       with:
         node-version: ${{ inputs.node-version }}
@@ -60,13 +54,11 @@ runs:
 #        key: node_modules-${{ hashFiles('**/package-lock.json') }}
 
     - name: Install dependencies
-      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: npm install
 #      if: steps.npm-cache.outputs.cache-hit != 'true'
 
     - name: Test
-      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         if [[ ${{ inputs.test }} == true ]]
@@ -75,7 +67,6 @@ runs:
         fi
 
     - name: Build
-      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         if [[ ${{ inputs.build }} == true ]]
@@ -84,7 +75,6 @@ runs:
         fi
 
     - name: Lint
-      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         if [[ ${{ inputs.lint }} == true ]]
@@ -93,7 +83,6 @@ runs:
         fi
 
     - name: Stylelint
-      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         if [[ ${{ inputs.style-lint }} == true ]]
@@ -102,7 +91,6 @@ runs:
         fi
 
     - name: NLS check
-      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         if [[ ${{ inputs.nls-check }} == true ]]
@@ -111,7 +99,6 @@ runs:
         fi
 
     - name: Configure CSP headers
-      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
         if [[ ${{ inputs.configure-csp-headers }} == true ]]
