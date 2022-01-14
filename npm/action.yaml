@@ -59,6 +59,7 @@ runs:
 #        key: node_modules-${{ hashFiles('**/package-lock.json') }}
 
     - name: Install dependencies
+      working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: npm install
 #      if: steps.npm-cache.outputs.cache-hit != 'true'
