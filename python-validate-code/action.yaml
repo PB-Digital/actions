@@ -12,7 +12,7 @@ runs:
     - id: runing-tests
       name: "Running tests"
       run: |
-        pytest
+        pytest --cov=app --cov-report xml:coverage.xml
       shell: bash
     - id: change-owner-files
       name: "Change owner files"
