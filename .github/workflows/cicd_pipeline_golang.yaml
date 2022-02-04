@@ -146,7 +146,7 @@ jobs:
           dockerRepo: ${{ secrets.dev-repo }}
           k8s-context: ${{ secrets.dev-k8s-context }}
   deploy_prod:
-    if: ${{ needs.check-allow-release.outputs.release-to-prod == true }}
+    if: ${{ needs.check-allow-release.outputs.release-to-prod == 'true' }}
     needs: [ validate-code, validate-infra, check-allow-release ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
@@ -168,7 +168,7 @@ jobs:
           dockerRepo: ${{ secrets.prod-repo }}
           k8s-context: ${{ secrets.prod-k8s-context }}
   deploy_rsrv:
-    if: ${{ needs.check-allow-release.outputs.release-to-rsrv == true }}
+    if: ${{ needs.check-allow-release.outputs.release-to-rsrv == 'true' }}
     needs: [ validate-code, validate-infra, check-allow-release ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
