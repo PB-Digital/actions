@@ -14,10 +14,18 @@ inputs:
     description: 'If file exists then deploying to production will be omited'
     required: false
     default: ""
+outputs:
+  release-to-prod:
+    description: 'Allow release to production flag'
+    value: ${{ steps.allow-release.outputs.release-to-prod }}
+  release-to-rsrv:
+    description: 'Allow release to reserve flag'
+    value: ${{ steps.allow-release.outputs.release-to-rsrv }}
 runs:
   using: composite
   steps:
     - name: Define allow release
+      id: allow-release
       working-directory: ${{ inputs.app-folder }}
       shell: bash
       run: |
