@@ -14,8 +14,3 @@ runs:
       run: |
         pytest --cov=app --cov-report xml:coverage.xml
       shell: bash
-    - id: change-owner-files
-      name: "Change owner files"
-      run: |
-        chown -R 1007:1008 .
-      shell: bash
