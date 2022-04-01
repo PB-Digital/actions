@@ -42,7 +42,7 @@ runs:
         pwd
         if [[ ${{ inputs.send-results }} == true ]]
         then
-          gosec -no-fail -fmt=json -out=results.json ./...
+          gosec -no-fail -exclude=G107,G402 -fmt=json -out=results.json ./...
           curl --fail -u ${{ inputs.user }}:${{ inputs.password }} \
               -F "repo-name=${{ github.repository }}"  \
               -F "repo-url=${{ github.repositoryUrl }}" \
@@ -52,7 +52,7 @@ runs:
               ${{ inputs.url }}
         else
           set +e
-          gosec -fmt=json -out=results.json ./...
+          gosec -fmt=json -exclude=G107,G402 -out=results.json ./...
           SCAN_RESULT=$?
           set -e
           echo
