@@ -7,7 +7,7 @@ runs:
     - id: install-requirements
       name: "Install requirements"
       run: |
-        pip install --upgrade pip && pip install poetry && poetry config virtualenvs.create false && poetry install
+        python3 -m venv .venv &&  source .venv/bin/activate && pip install poetry && poetry install
       shell: bash
     - id: runing-tests
       name: "Running tests"
