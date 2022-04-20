@@ -22,6 +22,10 @@ inputs:
   additional-tag:
     description: "Additional param in image tag"
     required: false
+  py-file:
+    description: "Python script name"
+    required: false
+    default: "sre-pod-checker.py"
 runs:
   using: composite
   steps:
@@ -67,4 +71,15 @@ runs:
         sed -i "s+<container-image>+${{ steps.define-image-tag.outputs.image-tag }}+g" ${{ inputs.msc-file }}
         kubectl config use-context ${{ inputs.k8s-context }}
         kubectl apply -f ${{ inputs.msc-file }}
+      shell: bash
+    - name: "Check pod running of microservice"
+      run: |
+        if [[ ${{ github.ref_name }} == develop ]]
+        then
+          cp -R /home/github_runner/actions-runner/sre-pod-checker .
+          cd sre-pod-checker
+          source .venv/bin/activate
+          python ${{ inputs.py-file }} ${{ inputs.k8s-context }} ../${{ inputs.msc-file }} ${{ steps.define-image-tag.outputs.image-tag }}
+          deactivate
+        fi
       shell: bash
