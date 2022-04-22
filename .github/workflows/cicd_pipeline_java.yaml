@@ -1,5 +1,9 @@
 name: Build and Deploy
 
+concurrency:
+  group: build-and-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_call:
     inputs:
