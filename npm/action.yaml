@@ -42,6 +42,11 @@ inputs:
     required: false
     default: "false"
 
+  publish:
+    description: "Publish to NPM"
+    required: false
+    default: "false"
+
 runs:
   using: composite
   steps:
@@ -116,4 +121,13 @@ runs:
         if [[ ${{ inputs.configure-csp-headers }} == true ]]
         then
           npm run configure:csp-headers
+        fi
+
+    - name: Publish to NPM
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.publish }} == true ]]
+        then
+          npm run publish
         fi
