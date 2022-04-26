@@ -117,8 +117,8 @@ jobs:
           k8s-context: ${{ secrets.dev-k8s-context }}
 
   deploy_prod:
-    if: ${{ needs.check-allow-release.outputs.release-to-prod == 'true' }}
-    needs: [ validate-code, validate-infra, check-allow-release ]
+    if: ${{ github.ref_name == 'master' }}
+    needs: [ validate-code, validate-infra ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
       - name: Checkout
@@ -139,7 +139,7 @@ jobs:
           k8s-context: ${{ secrets.prod-k8s-context }}
 
   deploy_rsrv:
-    if: ${{ inputs.deploy-to-rsrv == 'true' }}
+    if: ${{ github.ref_name == 'master' }}
     needs: [ validate-code, validate-infra ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
