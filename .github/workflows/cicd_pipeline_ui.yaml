@@ -1,9 +1,5 @@
 name: Build and Deploy
 
-concurrency:
-  group: build-and-deploy-${{ github.ref }}
-  cancel-in-progress: true
-
 on:
   workflow_call:
     inputs:
@@ -22,6 +18,8 @@ on:
         type: boolean
         default: true
     secrets:
+      npm-token:
+        required: true
       dev-repo:
         required: true
       dev-k8s-context:
@@ -42,6 +40,13 @@ on:
         required: true
       gha-pat:
         required: true
+
+concurrency:
+  group: build-and-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NPM_TOKEN: ${{ secrets.npm-token }}
 
 jobs:
   validate-code:
