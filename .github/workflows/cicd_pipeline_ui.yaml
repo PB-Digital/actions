@@ -76,6 +76,7 @@ jobs:
           style-lint: ${{ inputs.style-lint }}
           nls-check: ${{ inputs.nls-check }}
           lint: true
+          build: true
 
   validate-infra:
     runs-on: [ self-hosted, linux, kubectl, dev ]
