@@ -22,6 +22,16 @@ on:
         required: false
         type: boolean
         default: false
+      style-lint:
+        description: 'Stylelint'
+        required: false
+        type: boolean
+        default: true
+      nls-check:
+        description: 'Checking translation files integrity'
+        required: false
+        type: boolean
+        default: true
     secrets:
       npm-token:
         required: true
@@ -63,9 +73,9 @@ jobs:
         uses: pb-digital/actions/npm@infra/npm
         with:
           app-folder: ${{ inputs.app-folder }}
+          style-lint: ${{ inputs.style-lint }}
+          nls-check: ${{ inputs.nls-check }}
           lint: true
-          style-lint: true
-          nls-check: true
 
   validate-infra:
     runs-on: [ self-hosted, linux, kubectl, dev ]
