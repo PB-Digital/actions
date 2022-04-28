@@ -32,6 +32,11 @@ on:
         required: false
         type: boolean
         default: true
+      test:
+        description: 'Test'
+        required: false
+        type: boolean
+        default: true
     secrets:
       npm-token:
         required: true
@@ -75,6 +80,7 @@ jobs:
           app-folder: ${{ inputs.app-folder }}
           style-lint: ${{ inputs.style-lint }}
           nls-check: ${{ inputs.nls-check }}
+          test: ${{ inputs.test }}
           lint: true
           build: true
 
