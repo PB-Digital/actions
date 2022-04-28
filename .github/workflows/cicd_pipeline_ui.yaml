@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       app-folder:
-        description: 'Application location folder'
+        description: 'Application location folder, used by monorepo apps'
         required: false
         type: string
         default: "."
@@ -34,6 +34,16 @@ on:
         default: true
       test:
         description: 'Test'
+        required: false
+        type: boolean
+        default: true
+      lint:
+        description: 'Lint'
+        required: false
+        type: boolean
+        default: true
+      build:
+        description: 'Build'
         required: false
         type: boolean
         default: true
@@ -81,8 +91,8 @@ jobs:
           style-lint: ${{ inputs.style-lint }}
           nls-check: ${{ inputs.nls-check }}
           test: ${{ inputs.test }}
-          lint: true
-          build: true
+          lint: ${{ inputs.lint }}
+          build: ${{ inputs.build }}
 
   validate-infra:
     runs-on: [ self-hosted, linux, kubectl, dev ]
@@ -132,7 +142,7 @@ jobs:
       - name: Build
         uses: pb-digital/actions/npm@infra/npm
         with:
-          build: true
+          build: ${{ inputs.build }}
           app-folder: ${{ inputs.app-folder }}
           configure-csp-headers: ${{ inputs.configure-csp-headers }}
       - name: "Deploy"
@@ -154,7 +164,7 @@ jobs:
       - name: Build
         uses: pb-digital/actions/npm@infra/npm
         with:
-          build: true
+          build: ${{ inputs.build }}
           app-folder: ${{ inputs.app-folder }}
           configure-csp-headers: ${{ inputs.configure-csp-headers }}
       - name: "Deploy"
@@ -177,7 +187,7 @@ jobs:
       - name: Build
         uses: pb-digital/actions/npm@infra/npm
         with:
-          build: true
+          build: ${{ inputs.build }}
           app-folder: ${{ inputs.app-folder }}
           configure-csp-headers: ${{ inputs.configure-csp-headers }}
       - name: "Deploy"
