@@ -21,7 +21,7 @@ on:
         description: 'Configure CSP headers for NGINX'
         required: false
         type: boolean
-        default: false
+        default: true
       style-lint:
         description: 'Stylelint'
         required: false
