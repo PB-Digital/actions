@@ -49,7 +49,7 @@ on:
         default: true
     secrets:
       npm-token:
-        required: true
+        required: false
       dev-repo:
         required: true
       dev-k8s-context:
