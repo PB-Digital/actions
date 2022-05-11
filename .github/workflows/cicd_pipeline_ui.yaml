@@ -178,7 +178,7 @@ jobs:
           k8s-context: ${{ secrets.prod-k8s-context }}
 
   deploy_rsrv:
-    if: ${{ github.ref_name == 'master' }}
+    if: ${{ (github.ref_name == 'master') && (inputs.deploy-to-rsrv == true) }}
     needs: [ validate-code, validate-infra ]
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
