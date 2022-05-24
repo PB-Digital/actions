@@ -47,6 +47,11 @@ on:
         required: false
         type: boolean
         default: true
+      finger-deploy:
+        description: 'Whether deploy to dev env or not'
+        required: false
+        type: boolean
+        default: false
     secrets:
       npm-token:
         required: false
@@ -133,7 +138,7 @@ jobs:
           ruleset: "typescript"
 
   deploy_dev:
-    if: ${{ github.ref_name == 'develop' }}
+    if: ${{ (github.ref_name == 'develop') || (inputs.finger-deploy == true) }}
     needs: [ validate-code, validate-infra ]
     runs-on: [ self-hosted, linux, docker, kubectl, dev ]
     steps:
