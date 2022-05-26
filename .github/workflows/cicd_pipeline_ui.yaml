@@ -137,14 +137,14 @@ jobs:
           token: ${{ secrets.gha-pat }}
           ruleset: "typescript"
 
-    no_finger_deploy:
-      runs-on: [self-hosted, linux, docker, kubectl, dev]
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-        - name: Checking finger-deploy value
-          if: ${{ inputs.finger-deploy == true }}
-          run: exit 1
+  no_finger_deploy:
+    runs-on: [self-hosted, linux, docker, kubectl, dev]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Checking finger-deploy value
+        if: ${{ inputs.finger-deploy == true }}
+        run: exit 1
 
   deploy_dev:
     if: ${{ (github.ref_name == 'develop') || (inputs.finger-deploy == true) }}
