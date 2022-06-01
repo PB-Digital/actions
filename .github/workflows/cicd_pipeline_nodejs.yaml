@@ -137,7 +137,7 @@ jobs:
         run: exit 1
 
   deploy_dev:
-    if: ${{ github.ref_name == 'develop' }}
+    if: ${{ (github.ref_name == 'develop') || (inputs.finger-deploy == true) }}
     needs: [ validate-code, validate-infra ]
     runs-on: [ self-hosted, linux, docker, kubectl, dev ]
     steps:
