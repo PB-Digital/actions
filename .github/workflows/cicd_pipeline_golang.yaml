@@ -31,6 +31,11 @@ on:
         required: false
         type: string
         default: ""
+      go-version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: "1.15"
     secrets:
       dev-repo:
         required: true
@@ -80,6 +85,7 @@ jobs:
         uses: pb-digital/actions/go-build@v2
         with:
           app-folder: ${{ inputs.app-folder }}
+          go-version: ${{ inputs.go-version }}
   validate-infra:
     runs-on: [ self-hosted, linux, kubectl, dev ]
     steps:
@@ -100,6 +106,7 @@ jobs:
         uses: pb-digital/actions/gosec@v2
         with:
           app-folder: ${{ inputs.app-folder }}
+          go-version: ${{ inputs.go-version }}
   gosec-send:
     if: ${{ github.ref_name == 'develop' }}
     runs-on: [ self-hosted, linux, dev ]
@@ -114,6 +121,7 @@ jobs:
           url: ${{ secrets.infosec-url }}
           user: ${{ secrets.infosec-user }}
           password: ${{ secrets.infosec-pass }}
+          go-version: ${{ inputs.go-version }}
   send-to-sonar:
     needs: [ validate-code ]
     runs-on: [ self-hosted, linux, dev ]
@@ -141,6 +149,7 @@ jobs:
         with:
           build-only: true
           app-folder: ${{ inputs.app-folder }}
+          go-version: ${{ inputs.go-version }}
       - name: "Deploy"
         uses: pb-digital/actions/deploy-msc@v2
         with:
@@ -162,6 +171,7 @@ jobs:
         with:
           build-only: true
           app-folder: ${{ inputs.app-folder }}
+          go-version: ${{ inputs.go-version }}
       - name: "Deploy"
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
@@ -184,6 +194,7 @@ jobs:
         with:
           build-only: true
           app-folder: ${{ inputs.app-folder }}
+          go-version: ${{ inputs.go-version }}
       - name: "Deploy"
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
