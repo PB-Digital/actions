@@ -76,6 +76,7 @@ runs:
       shell: bash
 
     - name: "Check pod running of microservice"
+      working-directory: ${{ inputs.app-folder }}  
       run: |
         if [[ ${{ github.ref_name }} == develop ]]
         then
