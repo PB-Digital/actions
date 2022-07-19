@@ -88,7 +88,7 @@ jobs:
     runs-on: [ self-hosted, linux, dev ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build and Test
         uses: pb-digital/actions/npm@v2
         with:
@@ -103,7 +103,7 @@ jobs:
     runs-on: [ self-hosted, linux, kubectl, dev ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Validate
         uses: pb-digital/actions/validate-msc@v2
         with:
@@ -114,7 +114,7 @@ jobs:
     runs-on: [ self-hosted, linux, dev ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Semgrep scan
         uses: pb-digital/actions/semgrep@v1
         with:
@@ -126,7 +126,7 @@ jobs:
     runs-on: [ self-hosted, linux, dev ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Semgrep scan and send
         uses: pb-digital/actions/semgrep@v1
         with:
@@ -141,7 +141,7 @@ jobs:
     runs-on: [self-hosted, linux, docker, kubectl, dev]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Checking finger-deploy value
         if: ${{ inputs.finger-deploy == true }}
         run: exit 1
@@ -152,7 +152,7 @@ jobs:
     runs-on: [ self-hosted, linux, docker, kubectl, dev ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build
         uses: pb-digital/actions/npm@v2
         with:
@@ -174,7 +174,7 @@ jobs:
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build
         uses: pb-digital/actions/npm@v2
         with:
@@ -197,7 +197,7 @@ jobs:
     runs-on: [ self-hosted, linux, docker, kubectl, prod ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build
         uses: pb-digital/actions/npm@v2
         with:
