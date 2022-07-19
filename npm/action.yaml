@@ -1,0 +1,133 @@
+name: npm
+author: "PASHA Bank"
+description: "Build, lint, test NPM project"
+inputs:
+  app-folder:
+    description: "Application folder"
+    required: false
+    default: "."
+
+  node-version:
+    description: "NodeJS version to use"
+    required: false
+    default: "14"
+
+  test:
+    description: "Run test"
+    required: false
+    default: "false"
+
+  build:
+    description: "Run build"
+    required: false
+    default: "false"
+
+  lint:
+    description: "Run lint"
+    required: false
+    default: "false"
+
+  style-lint:
+    description: "Run stylelint"
+    required: false
+    default: "false"
+
+  nls-check:
+    description: "Run nls check"
+    required: false
+    default: "false"
+
+  configure-csp-headers:
+    description: "Configure CSP headers"
+    required: false
+    default: "false"
+
+  publish:
+    description: "Publish to NPM"
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup NodeJS version
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ inputs.node-version }}
+
+# Downloading cache takes longer than downloading the packages from NPM (https://github.com/PB-Digital/ui-login-application/runs/4594155000?check_suite_focus=true#step:3:159)
+#    - name: Restore npm cache
+#      uses: actions/cache@v2.1.4
+#      id: npm-cache
+#      with:
+#        path: node_modules
+#        key: node_modules-${{ hashFiles('**/package-lock.json') }}
+
+    - name: Install dependencies
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: npm install
+#      if: steps.npm-cache.outputs.cache-hit != 'true'
+
+    - name: Test
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.test }} == true ]]
+        then
+          npm run test
+        fi
+
+    - name: Build
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.build }} == true ]]
+        then
+          npm run build
+        fi
+
+    - name: Lint
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.lint }} == true ]]
+        then
+          npm run lint
+        fi
+
+    - name: Stylelint
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.style-lint }} == true ]]
+        then
+          npm run lint:style
+        fi
+
+    - name: NLS check
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.nls-check }} == true ]]
+        then
+          npm run nls:check
+        fi
+
+    - name: Configure CSP headers
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.configure-csp-headers }} == true ]]
+        then
+          npm run configure:csp-headers
+        fi
+
+    - name: Publish to NPM
+      working-directory: ${{ inputs.app-folder }}
+      shell: bash
+      run: |
+        if [[ ${{ inputs.publish }} == true ]]
+        then
+          npm run publish
+        fi
