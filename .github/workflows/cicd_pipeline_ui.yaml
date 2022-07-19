@@ -1,0 +1,215 @@
+name: Build and Deploy
+
+on:
+  workflow_call:
+    inputs:
+      app-name:
+        description: 'Application name. Will be used in docker image name'
+        required: true
+        type: string
+      app-folder:
+        description: 'Application location folder, used by monorepo apps'
+        required: false
+        type: string
+        default: "."
+      deploy-to-rsrv:
+        description: 'Deploy to reserve cluster'
+        required: false
+        type: boolean
+        default: true
+      configure-csp-headers:
+        description: 'Configure CSP headers for NGINX'
+        required: false
+        type: boolean
+        default: true
+      style-lint:
+        description: 'Stylelint'
+        required: false
+        type: boolean
+        default: true
+      nls-check:
+        description: 'Checking translation files integrity'
+        required: false
+        type: boolean
+        default: true
+      test:
+        description: 'Test'
+        required: false
+        type: boolean
+        default: true
+      lint:
+        description: 'Lint'
+        required: false
+        type: boolean
+        default: true
+      build:
+        description: 'Build'
+        required: false
+        type: boolean
+        default: true
+      finger-deploy:
+        description: 'Whether deploy to dev env or not'
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      npm-token:
+        required: false
+      dev-repo:
+        required: true
+      dev-k8s-context:
+        required: true
+      prod-repo:
+        required: true
+      prod-k8s-context:
+        required: true
+      rsrv-repo:
+        required: false
+      rsrv-k8s-context:
+        required: false
+      infosec-url:
+        required: true
+      infosec-user:
+        required: true
+      infosec-pass:
+        required: true
+      gha-pat:
+        required: true
+
+concurrency:
+  group: build-and-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NPM_TOKEN: ${{ secrets.npm-token }}
+
+jobs:
+  validate-code:
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build and Test
+        uses: pb-digital/actions/npm@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          style-lint: ${{ inputs.style-lint }}
+          nls-check: ${{ inputs.nls-check }}
+          test: ${{ inputs.test }}
+          lint: ${{ inputs.lint }}
+          build: ${{ inputs.build }}
+
+  validate-infra:
+    runs-on: [ self-hosted, linux, kubectl, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Validate
+        uses: pb-digital/actions/validate-msc@v2
+        with:
+          app-folder: ${{ inputs.app-folder }}
+          k8s-context: ${{ secrets.dev-k8s-context }}
+
+  scan-semgrep:
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Semgrep scan
+        uses: pb-digital/actions/semgrep@v1
+        with:
+          token: ${{ secrets.gha-pat }}
+          ruleset: "typescript"
+
+  send-semgrep:
+    if: ${{ github.ref_name == 'develop' }}
+    runs-on: [ self-hosted, linux, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Semgrep scan and send
+        uses: pb-digital/actions/semgrep@v1
+        with:
+          send-results: "true"
+          url: ${{ secrets.infosec-url }}
+          user: ${{ secrets.infosec-user }}
+          password: ${{ secrets.infosec-pass }}
+          token: ${{ secrets.gha-pat }}
+          ruleset: "typescript"
+
+  no_finger_deploy:
+    runs-on: [self-hosted, linux, docker, kubectl, dev]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Checking finger-deploy value
+        if: ${{ inputs.finger-deploy == true }}
+        run: exit 1
+
+  deploy_dev:
+    if: ${{ (github.ref_name == 'develop') || (inputs.finger-deploy == true) }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, dev ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        uses: pb-digital/actions/npm@v2
+        with:
+          build: ${{ inputs.build }}
+          app-folder: ${{ inputs.app-folder }}
+          configure-csp-headers: ${{ inputs.configure-csp-headers }}
+      - name: "Deploy"
+        uses: pb-digital/actions/deploy-msc@v2
+        with:
+          appName: ${{ inputs.app-name }}
+          app-folder: ${{ inputs.app-folder }}
+          additional-tag: dev
+          dockerRepo: ${{ secrets.dev-repo }}
+          k8s-context: ${{ secrets.dev-k8s-context }}
+
+  deploy_prod:
+    if: ${{ github.ref_name == 'master' }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, prod ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        uses: pb-digital/actions/npm@v2
+        with:
+          build: ${{ inputs.build }}
+          app-folder: ${{ inputs.app-folder }}
+          configure-csp-headers: ${{ inputs.configure-csp-headers }}
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v2
+        with:
+          appName: ${{ inputs.app-name }}
+          app-folder: ${{ inputs.app-folder }}
+          additional-tag: prod
+          dockerRepo: ${{ secrets.prod-repo }}
+          k8s-context: ${{ secrets.prod-k8s-context }}
+
+  deploy_rsrv:
+    if: ${{ (github.ref_name == 'master') && (inputs.deploy-to-rsrv == true) }}
+    needs: [ validate-code, validate-infra ]
+    runs-on: [ self-hosted, linux, docker, kubectl, prod ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        uses: pb-digital/actions/npm@v2
+        with:
+          build: ${{ inputs.build }}
+          app-folder: ${{ inputs.app-folder }}
+          configure-csp-headers: ${{ inputs.configure-csp-headers }}
+      - name: "Deploy"
+        id: deploy
+        uses: pb-digital/actions/deploy-msc@v2
+        with:
+          appName: ${{ inputs.app-name }}
+          app-folder: ${{ inputs.app-folder }}
+          additional-tag: rsrv
+          dockerRepo: ${{ secrets.rsrv-repo }}
+          k8s-context: ${{ secrets.rsrv-k8s-context }}
