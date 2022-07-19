@@ -34,7 +34,8 @@ runs:
       shell: bash
       working-directory: ${{ inputs.app-folder }}
       run: |
-        go get github.com/securego/gosec/cmd/gosec
+        # go get github.com/securego/gosec/cmd/gosec
+        go install github.com/securego/gosec/v2/cmd/gosec@latest
     - name: Define repo name
       id: define-repo-name
       shell: bash
