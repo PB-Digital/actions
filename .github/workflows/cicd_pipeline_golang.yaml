@@ -80,7 +80,7 @@ jobs:
     runs-on: [ self-hosted, linux, dev ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Build and Test
         uses: pb-digital/actions/go-build@v2
         with:
