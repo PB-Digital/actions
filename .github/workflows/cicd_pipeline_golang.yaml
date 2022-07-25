@@ -36,6 +36,11 @@ on:
         required: false
         type: string
         default: "1.15"
+      go-test-cmd:
+        description: "Command that runs tests"
+        required: false
+        type: string
+        default: ""
     secrets:
       dev-repo:
         required: true
@@ -86,6 +91,7 @@ jobs:
         with:
           app-folder: ${{ inputs.app-folder }}
           go-version: ${{ inputs.go-version }}
+          go-test-cmd: ${{ inputs.go-test-cmd }}
   validate-infra:
     runs-on: [ self-hosted, linux, kubectl, dev ]
     steps:
@@ -150,6 +156,7 @@ jobs:
           build-only: true
           app-folder: ${{ inputs.app-folder }}
           go-version: ${{ inputs.go-version }}
+          go-test-cmd: ${{ inputs.go-test-cmd }}
       - name: "Deploy"
         uses: pb-digital/actions/deploy-msc@v2
         with:
@@ -172,6 +179,7 @@ jobs:
           build-only: true
           app-folder: ${{ inputs.app-folder }}
           go-version: ${{ inputs.go-version }}
+          go-test-cmd: ${{ inputs.go-test-cmd }}
       - name: "Deploy"
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2
@@ -195,6 +203,7 @@ jobs:
           build-only: true
           app-folder: ${{ inputs.app-folder }}
           go-version: ${{ inputs.go-version }}
+          go-test-cmd: ${{ inputs.go-test-cmd }}
       - name: "Deploy"
         id: deploy
         uses: pb-digital/actions/deploy-msc@v2

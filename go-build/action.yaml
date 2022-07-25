@@ -10,6 +10,10 @@ inputs:
     description: "Go version to use"
     required: false
     default: "1.15"
+  go-test-cmd:
+    description: "Command that runs tests"
+    required: false
+    default: ""
   build-only:
     description: "Run only build"
     required: false
@@ -50,8 +54,13 @@ runs:
         pwd
         if [[ ${{ inputs.build-only }} != true ]]
         then
-          go mod download
-          go test ./... -v -coverprofile cover.out
+          if [[ ${{ inputs.go-test-cmd }} != '' ]]
+          then
+            {{inputs.test-cmd}}
+          else
+            go mod download
+            go test ./... -v -coverprofile cover.out
+          fi
         fi
       shell: bash
     - name: Build
